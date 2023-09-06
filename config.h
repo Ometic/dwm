@@ -1,5 +1,9 @@
 /* See LICENSE file for copyright and license details. */
 
+/* Imports */
+#include "fibonacci.c"
+
+/* Macros */
 #define MODKEY Mod4Mask
 #define SHCMD(cmd) { .v = (const char*[]){ "/bin/sh", "-c", cmd, NULL } }
 #define TAGKEYS(KEY,TAG) \
@@ -44,7 +48,7 @@ static const int resizehints = 1;
 static const int lockfullscreen = 1; 
 
 static const Layout layouts[] = {
-	{ "[]=",      tile }, 
+	{ "[\\]",     dwindle }, 
 	{ "><>",      NULL },
 };
 
