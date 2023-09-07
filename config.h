@@ -17,6 +17,13 @@ static const unsigned int borderpx  = 3;
 static const unsigned int snap = 32;
 static const char *fonts[] = { "Hack Nerd Font:size=12" };
 
+/* Gaps */
+static const unsigned int gappih = 10;
+static const unsigned int gappiv = 10;
+static const unsigned int gappoh = 10;
+static const unsigned int gappov = 10;
+static const int smartgaps = 0;
+
 /* Bar */
 static const int showbar = 0;
 static const int topbar = 0;
