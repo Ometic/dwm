@@ -1,56 +1,57 @@
 --- dwm.c
 +++ dwm.c
-@@ -190,7 +196,7 @@ static void maprequest(XEvent *e);
- static void monocle(Monitor *m);
- static void motionnotify(XEvent *e);
- static void movemouse(const Arg *arg);
--static Client *nexttiled(Client *c);
-+static Client *nexttiled(Client *c, Monitor *m);
- static void pop(Client *);
- static void propertynotify(XEvent *e);
- static void quit(const Arg *arg);
-@@ -1972,8 +2070,10 @@ updategeom(void)
- 		if (n <= nn) { /* new monitors available */
- 			for (i = 0; i < (nn - n); i++) {
- 				for (m = mons; m && m->next; m = m->next);
--				if (m)
-+				if (m) {
- 					m->next = createmon();
-+					attachclients(m->next);
-+				}
- 				else
- 					mons = createmon();
- 			}
-@@ -1993,16 +2093,13 @@ updategeom(void)
- 		} else { /* less monitors available nn < n */
- 			for (i = nn; i < n; i++) {
- 				for (m = mons; m && m->next; m = m->next);
--				while ((c = m->clients)) {
--					dirty = 1;
--					m->clients = c->next;
--					detachstack(c);
--					c->mon = mons;
--					attach(c);
--					attachstack(c);
--				}
- 				if (m == selmon)
- 					selmon = mons;
-+				for (c = m->cl->clients; c; c = c->next) {
-+					dirty = True;
-+					if (c->mon == m)
-+						c->mon = selmon;
-+				}
- 				cleanupmon(m);
- 			}
- 		}
-@@ -2238,8 +2354,8 @@ zoom(const Arg *arg)
- 	if (!selmon->lt[selmon->sellt]->arrange
- 	|| (selmon->sel && selmon->sel->isfloating))
+@@ -255,6 +269,7 @@ static char stext[256];
+ static int screen;
+ static int sw, sh;           /* X display screen geometry width, height */
+ static int bh, blw = 0;      /* bar geometry */
++static int enablegaps = 1;   /* enables gaps, used by togglegaps */
+ static int lrpad;            /* sum of left and right padding for text */
+ static int (*xerrorxlib)(Display *, XErrorEvent *);
+ static unsigned int numlockmask = 0;
+@@ -1797,28 +1921,34 @@ tagmon(const Arg *arg)
+ void
+ tile(Monitor *m)
+ {
+-	unsigned int i, n, h, mw, my, ty;
++	unsigned int i, n, h, r, oe = enablegaps, ie = enablegaps, mw, my, ty;
+ 	Client *c;
+ 
+ 	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
+ 	if (n == 0)
  		return;
--	if (c == nexttiled(selmon->clients))
--		if (!c || !(c = nexttiled(c->next)))
-+	if (c == nexttiled(selmon->cl->clients, selmon))
-+		if (!c || !(c = nexttiled(c->next, selmon)))
- 			return;
- 	pop(c);
+ 
++	if (smartgaps == n) {
++		oe = 0; // outer gaps disabled
++	}
++
+ 	if (n > m->nmaster)
+-		mw = m->nmaster ? m->ww * m->mfact : 0;
++		mw = m->nmaster ? (m->ww + m->gappiv*ie) * m->mfact : 0;
+ 	else
+-		mw = m->ww;
+-	for (i = my = ty = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
++		mw = m->ww - 2*m->gappov*oe + m->gappiv*ie;
++	for (i = 0, my = ty = m->gappoh*oe, c = nexttiled(m->clients); c; c = nexttiled(c->next), i++)
+ 		if (i < m->nmaster) {
+-			h = (m->wh - my) / (MIN(n, m->nmaster) - i);
+-			resize(c, m->wx, m->wy + my, mw - (2*c->bw), h - (2*c->bw), 0);
+-			if (my + HEIGHT(c) < m->wh)
+-				my += HEIGHT(c);
++			r = MIN(n, m->nmaster) - i;
++			h = (m->wh - my - m->gappoh*oe - m->gappih*ie * (r - 1)) / r;
++			resize(c, m->wx + m->gappov*oe, m->wy + my, mw - (2*c->bw) - m->gappiv*ie, h - (2*c->bw), 0);
++			if (my + HEIGHT(c) + m->gappih*ie < m->wh)
++			my += HEIGHT(c) + m->gappih*ie;
+ 		} else {
+-			h = (m->wh - ty) / (n - i);
+-			resize(c, m->wx + mw, m->wy + ty, m->ww - mw - (2*c->bw), h - (2*c->bw), 0);
+-			if (ty + HEIGHT(c) < m->wh)
+-				ty += HEIGHT(c);
++			r = n - i;
++			h = (m->wh - ty - m->gappoh*oe - m->gappih*ie * (r - 1)) / r;
++			resize(c, m->wx + mw + m->gappov*oe, m->wy + ty, m->ww - mw - (2*c->bw) - 2*m->gappov*oe, h - (2*c->bw), 0);
++			if (ty + HEIGHT(c) + m->gappih*ie < m->wh)
++				ty += HEIGHT(c) + m->gappih*ie;
+ 		}
  }
+ 
