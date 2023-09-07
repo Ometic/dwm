@@ -13,13 +13,13 @@
 	{ MODKEY|ControlMask|ShiftMask, KEY,      toggletag,      {.ui = 1 << TAG} },
 
 /* General */
-static const unsigned int borderpx  = 1;
+static const unsigned int borderpx  = 3;
 static const unsigned int snap = 32;
 static const char *fonts[] = { "Hack Nerd Font:size=12" };
 
 /* Bar */
-static const int showbar = 1;
-static const int topbar = 1;
+static const int showbar = 0;
+static const int topbar = 0;
 
 /* Colors */
 static const char col_gray1[] = "#222222";
